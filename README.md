@@ -135,7 +135,7 @@ model=XML-CNN ## XML-CNN, TRF-Single, TRF-Multi, TRF-Delay-Multi, or TRF-Sequent
 デフォルトでは20news groupデータセットの学習を行います.
 Optunaの最適化, 本訓練の利用データを変更するには`hyper_params_opt.sh`, `training.sh`のデータパスを変更してください.
 
-`hyper_param_opt.sh`
+`hyper_params_opt.sh`
 ```
 DIR=/mnt/WD_Blue/Multitask_master/Corpus/ACL/5test/20news
 valid_trainData=${DIR}/20news_train.xml <-- ここ
