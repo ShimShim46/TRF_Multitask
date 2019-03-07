@@ -40,36 +40,37 @@
             
             でインストールできます。
     3. Anacondaをインストール後、仮想環境を構築
-        ```conda env create -f=hft_cnn_env.yml```
-    4. ```source activate hft_cnn_env```　で仮想環境に切り替え
-    5. この環境内でHFT-CNNのコードを実行することが可能
+        ```conda env create -f=trf_multitask_env.yml```
+    4. ```source activate trf_multitask_env```　で仮想環境に切り替え
+    5. この環境内でコードを実行することが可能
 
 ## ディレクトリ構造
 ```
-|--CNN  ## 学習結果を保存されるディレクトリ
-|  |--LOG     ## 学習ログ                                                                                                        
-|  |--PARAMS  ## CNNの学習パラメータ
-|  |--RESULT  ## 分類結果
-|--cnn_model.py  ## CNNモデル
-|--cnn_train.py  ## CNNの学習
-|--data_helper.py  ## データ整形/操作
-|--example.sh  ## 実行することでサンプルデータの分類が可能
-|--hft_cnn_env.yml ## 依存関係(Anaconda)
-|--LICENSE  ## MITライセンス
-|--MyEvaluator.py  ## CNNの学習 validationの処理
-|--MyUpdater.py  ## CNNの学習 1iterationの処理
-|--README.md  ## README
-|--requirements.txt  ## 依存関係(pip)
-|--Sample_data  ## サンプルの文書データ(Amazon)
-|  |--sample_test.txt  ## 評価
-|  |--sample_train.txt  ## 訓練
-|  |--sample_valid.txt  ## 検証
-|--train.py  ## main関数
-|--Tree
-|  |--Amazon_all.tree   ## Amazon用の木構造ファイル
-|--tree.py  ## 木構造の操作
-|--Word_embedding  ## 単語の分散表現ディレクトリ
-|--xml_cnn_model.py  ## LiuらのXML-CNNモデル(chainer実装)
+|--README.md ## README
+|--RESULT_TRF-Delay-Multi ## TRF-Delay-Multiの結果保存ディレクトリ
+|  |--TRF-Delay-Multi_opt.db ## TRF-Delay-MultiのOptunaの最適化データベース
+|--RESULT_TRF-Multi ## TRF-Multiの結果保存ディレクトリ
+|  |--TRF-Multi_opt.db ## TRF-MultiのOptunaの最適化データベース
+|--RESULT_TRF-Sequential ## TRF-Sequentialの結果保存ディレクトリ
+|  |--TRF-Sequential_opt.db ## TRF-MultiのOptunaの最適化データベース
+|--RESULT_TRF-Single ## TRF-Singleの結果保存ディレクトリ
+|  |--TRF-Single_opt.db  ## TRF-SingleのOptunaの最適化データベース
+|--RESULT_XML-CNN  ## XML-CNNの結果保存ディレクトリ
+|  |--XML-CNN_opt.db  ## XML-CNNのOptunaの最適化データベース
+|--embedding  ## 事前学習済み分散表現をここに配置(初期は空ディレクトリ)
+|--hyper_parms_optuna.sh  ## Optunaによるハイパーパラメータの最適化を行うシェルスクリプト
+|--program  ## プログラム(Python)群
+|  |--__pycache__  ## キャッシュ
+|  |  |--net.cpython-35.pyc
+|  |  |--sentence_reader.cpython-35.pyc
+|  |  |--xmlcnn.cpython-35.pyc
+|  |--net.py  ##  TRF-XXXモデル(Single, Multi, Delay-Multi, Sequential)
+|  |--opt_param.py  ##  Optunaによるハイパーパラメータ最適化プログラム
+|  |--sentence_reader.py  ##  データの読み込みプログラム
+|  |--train.py  ##  本訓練プログラム
+|  |--xmlcnn.py  ## XML-CNNモデル
+|--training.sh  ## 本訓練を行うシェルスクリプト
+
 ```
 
 ## Quick-start
