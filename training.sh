@@ -1,6 +1,7 @@
 #! /bin/bash
 DIR=/mnt/WD_Blue/Multitask_master/Corpus/ACL/5test/20news
 trainData=${DIR}/20news_train.xml
+testData=${DIR}/20news_test1.xml
 
 ## hyper-params ##
 epoch=100
@@ -11,7 +12,7 @@ pretrained=0
 multilabel=0
 model=XML-CNN ## XML-CNN, TRF-Single, TRF-Multi, TRF-Delay-Multi, or TRF-Sequential ##
 
-testData=${DIR}/20news_test1.xml
+
 
 
 FP=RESULT_${model}

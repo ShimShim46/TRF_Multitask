@@ -129,3 +129,21 @@ pretrained=0 <-- ここ (0ならばランダムベクトル, 1ならばfastText�
 multilabel=0
 model=XML-CNN ## XML-CNN, TRF-Single, TRF-Multi, TRF-Delay-Multi, or TRF-Sequential ##
 ```
+
+## データセットについて ##
+
+デフォルトでは20news groupデータセットの学習を行います.
+Optunaの最適化, 本訓練の利用データを変更するには`hyper_params_opt.sh`, `training.sh`のデータパスを変更してください.
+
+`hyper_param_opt.sh`
+```
+DIR=/mnt/WD_Blue/Multitask_master/Corpus/ACL/5test/20news
+valid_trainData=${DIR}/20news_train.xml <-- ここ
+valid_testData=${DIR}/20news_train.xml <--　ここ
+```
+`training.sh`
+```
+DIR=/mnt/WD_Blue/Multitask_master/Corpus/ACL/5test/20news
+trainData=${DIR}/20news_train.xml <-- ここ
+testData=${DIR}/20news_test1.xml <-- ここ
+```
