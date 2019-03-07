@@ -35,7 +35,7 @@ MAX_SEN_LEN = 100
 
 
 
-
+## 推論 ##
 def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_label):
     ## 推論 ##
     print ("")
@@ -141,7 +141,7 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         print ("Macro F1\t{}".format(macro_f1_tc))
         print ("Accuracy\t{}".format(accuracy_tc))
 
-
+        ## ファイルの書き出し ##
         result_file_txt_cat = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_TC", mode="w")
         result_file_fscore = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_TC_fscore", mode="w")
 
@@ -160,7 +160,7 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         result_file_txt_cat.close()
 
     if not preds_wsd is None:
-
+        ## F値の計算 ##
         ## WSD ##
         ans_wsd = [label for label in chain(*test_data['labels']) if label != "<PAD>"]
         assert len(ans_wsd) == len(netouts_wsd)
@@ -173,7 +173,8 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         print ("Micro F1\t{}".format(micro_f1_wsd))
         print ("Macro F1\t{}".format(macro_f1_wsd))
         print ("Accuracy\t{}".format(accuracy_wsd))
-
+        
+        ## ファイルの書き出し ##
         result_file_fscore = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_WSD_fscore", mode="w")
         result_file_wsd = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_WSD", mode="w")
         result_file_fscore.write("Micro F1\t" + str(micro_f1_wsd) + "\n")
@@ -193,7 +194,7 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
     print("Writing out prediction...")
 
 
-
+## 引数の受け取り ##
 def parse_arguments():
 
     parser = argparse.ArgumentParser()
@@ -241,7 +242,7 @@ def parse_arguments():
 
 
 
-
+## データの読み込み ##
 def prepare():
     if args.gpu >= 0:
         cuda.check_cuda_available()
@@ -250,7 +251,7 @@ def prepare():
     reader = SentenceReaderDir(args.intraindata, args.batchsize)
     print("")
     print("-"*50)
-    print('n_vocab: %d' % (len(reader.word2index)-3)) # excluding the three special tokens
+    print('n_vocab: %d' % (len(reader.word2index)-1)) # excluding the three special tokens
     print('corpus size: %d' % (reader.total_words))
 
     max_sen_len = MAX_SEN_LEN
@@ -261,9 +262,9 @@ def prepare():
 
 
 
-
+## 訓練 ##
 def objective(args):
-    emb_dim = 100
+    emb_dim = 100 ## 分散表現の次元数 ##
     pre_trained_embedding = None
     use_pretrained = None
 
@@ -276,6 +277,10 @@ def objective(args):
     print (args.model)
     print  ("-"*50)
 
+    """
+    *_opt.dbファイルがあれば,そのデータベースで最も良いハイパーパラメータの組み合わせを取ってくる
+    なければ手動設定のハイパーパラメータが設定される.
+    """
     if 'TRF' in args.model: 
         if args.model == 'TRF-Single':
             db_path = args.filepath + "/" + args.model + "_opt.db"
@@ -382,6 +387,7 @@ def objective(args):
     else:
         loop = 1
 
+    ## 全体の処理 (sequentialのみ2回ループ, 他は1ループ)##
     for i in range(loop):
         if args.model == "TRF-Sequential":
             if i == 0:

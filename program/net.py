@@ -379,12 +379,13 @@ class Transformer(chainer.Chain):
             history_mask, (batch, length, length))
         return history_mask
 
-    
+    ## 文書分類 ##
     def tc(self,trf_encoded_matrix):
         sum_matrix = F.sum(trf_encoded_matrix,axis=2)
         y_tc = self.fc2(sum_matrix)
         return y_tc
-
+    
+    ## 語義の曖昧さ解消 ##
     def wsd_only(self,trf_encoded_matrix,labels):
         ### WSD ###
         wsd = trf_encoded_matrix.reshape(-1,trf_encoded_matrix.shape[-2]) ## [batch_size * word, depth]
@@ -401,6 +402,7 @@ class Transformer(chainer.Chain):
 
         return y_wsd
 
+    ## 語義の曖昧さ解消タスクの結果を文書分類に利用 ##
     def wsd_with_tc(self,sent,trf_encoded_matrix,labels):
 
         ### WSD ###
@@ -439,6 +441,7 @@ class Transformer(chainer.Chain):
         return (y_tc, y_wsd) if (self.model_type == "TRF-Multi") or (self.model_type == "TRF-Delay-Multi") else y_tc
 
 
+    ## main 関数 ##
     def __call__(self, sent, opt, epoch=None, get_prediction=False):
         self.set_random_seed(123)
         self.embed_x.disable_update()
@@ -460,7 +463,7 @@ class Transformer(chainer.Chain):
         # Encode Sources
 
         ## ここはTRF ##
-        trf_sentence_matrix = self.encoder(ex_block, xx_mask) ## 共有特徴
+        trf_sentence_matrix = self.encoder(ex_block, xx_mask) ## 共有特徴(TCとWSD)
         y_tc = None
         y_wsd = None
 

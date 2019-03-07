@@ -29,8 +29,9 @@ chainer.config.cudnn_deterministic = True
 chainer.config.use_cudnn = 'never'
 MAX_SEN_LEN = 100
 
+## 推論 ##
 def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_label, best_mic, best_mac):
-    ## 推論 ##
+   
     print ("")
     print ("-"*50)
     print ("Estimate")
@@ -45,8 +46,6 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
     is_multi_task = 0
     if "Multi" in model_type.split("-"):
         is_multi_task = 1
-
-
 
     for i in tqdm(six.moves.range(0, test_data_size, batch_size)):
         x = test_data['indexed_text'][i : i + batch_size]
@@ -135,7 +134,7 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         print ("Accuracy\t{}".format(accuracy_tc))
 
     if not preds_wsd is None:
-
+        ## F値の計算 ##
         ## WSD ##
         ans_wsd = [label for label in chain(*test_data['labels']) if label != "<PAD>"]
         assert len(ans_wsd) == len(netouts_wsd)
@@ -159,6 +158,7 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
 
     return best_mic, best_mac
     
+## 引数の受け取り ##
 def parse_argument():
 
     parser = argparse.ArgumentParser() 
@@ -209,7 +209,7 @@ def parse_argument():
 
     return args
 
-
+## データの読み込み ##
 def prepare():
     if args.gpu >= 0:
         cuda.check_cuda_available()
@@ -218,7 +218,7 @@ def prepare():
     reader = SentenceReaderDir(args.intraindata, args.batchsize)
     print("")
     print("-"*50)
-    print('n_vocab: %d' % (len(reader.word2index)-3)) # excluding the three special tokens
+    print('n_vocab: %d' % (len(reader.word2index)-1)) # excluding the three special tokens
     print('corpus size: %d' % (reader.total_words))
 
     max_sen_len = MAX_SEN_LEN
@@ -228,7 +228,7 @@ def prepare():
     return reader, train_data, test_data
 
 
-
+## 訓練 ##
 def objective(trial):
 
     emb_dim = 100 ##これはHEADの数が関係するので今回は固定
@@ -302,6 +302,7 @@ def objective(trial):
     else:
         loop = 1
 
+    ## 全体の処理 (sequentialのみ2回ループ, 他は1ループ)##
     for i in range(loop):
         if args.model == "TRF-Sequential":
             if i == 0:
@@ -365,7 +366,7 @@ def objective(trial):
 
 
 if __name__ == "__main__":
-    num_of_trials = 1 ## n_trialsはhyper_parameterを探索する試行回数
+    num_of_trials = 20 ## n_trialsはhyper_parameterを探索する試行回数
     args = parse_argument()
     reader,train_data, test_data = prepare()
     study = optuna.Study(study_name=args.dbname, storage=args.storagename)
