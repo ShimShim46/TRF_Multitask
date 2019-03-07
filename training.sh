@@ -9,7 +9,7 @@ gpu=0
 shuffle=yes
 pretrained=0
 multilabel=0
-model=TRF-Delay-Multi
+model=XML-CNN ## XML-CNN, TRF-Single, TRF-Multi, TRF-Delay-Multi, or TRF-Sequential ##
 
 testData=${DIR}/20news_test1.xml
 
