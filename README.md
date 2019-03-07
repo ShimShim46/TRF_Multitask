@@ -2,7 +2,7 @@
 ==
 このコードでは次の5種類のモデルが利用できます:
 
-* XML-CNN モデル ([Liu+ '17](http://nyc.lti.cs.cmu.edu/yiming/Publications/jliu-sigir17.pdf)) : Liuら'17 の提案したモデル
+* XML-CNN ([Liu+ '17](http://nyc.lti.cs.cmu.edu/yiming/Publications/jliu-sigir17.pdf)) : Liuら'17 の提案したモデル
 * TRF-Single: Transformer Encoderを用いて文書行列を作成, 文書分類タスクのみを学習
 * TRF-Multi: Transformer Encoderを用いて文書行列を作成, 語義の曖昧さ解消タスクと文書分類タスクを同時に学習
 * TRF-Delay-Multi: Transformer Encoderを用いて文書行列を作成, 語義の曖昧さ解消タスクを先行して学習, その後文書分類タスクと統合しマルチタスク学習
@@ -11,12 +11,12 @@
 
 ### 各モデルの特徴
 
-|              特徴\手法 |   Flatモデル  |   WoFtモデル  |   HFTモデル   |    XML-CNNモデル    |
-|-----------------------:|:-------------:|:-------------:|:-------------:|:-------------------:|
-|              Hierarchycal Structure |               |       ✔       |       ✔       |                     |
-|            Fine-tuning |               |       ✔       |       ✔       |                     |
-|                Pooling Type | 1-max pooling | 1-max pooling | 1-max pooling | dynamic max pooling |
-| Compact Representation |               |               |               |          ✔          |
+|      特徴\モデル     | XML-CNN | TRF-Single | TRF-Multi |                        TRF-Delay-Multi                       |        TRF-Sequential       |
+|:--------------------:|:-------:|:----------:|:---------:|:------------------------------------------------------------:|:---------------------------:|
+| Convolution?         |    ✔    |            |           |                                                              |                             |
+| Single-Task?         |    ✔    |      ✔     |           |                                                              | ✔(それぞれのタスクを順番に) |
+|      Multi-Task?     |         |            |     ✔     | ✔(先に語義の曖昧さ解消タスク,  途中から文書分類タスクと統合) |                             |
+| Transformer Encoder? |         |      ✔     |     ✔     |                               ✔                              |              ✔              |
 
 ## Requirements
 このコードを実行するために必要なライブラリのうち、代表的なものを次に示します。
@@ -120,7 +120,12 @@ model=XML-CNN ## XML-CNN, TRF-Single, TRF-Multi, TRF-Delay-Multi, or TRF-Sequent
 * 1: RCV1コーパスを用いた分散表現(このコードでは単語の分散表現に[fastText](https://github.com/facebookresearch/fastText)の学習結果を利用しています)
 
 ```
-python program/train.py -itrain ${trainData}  -itest ${testData} -m ${model}  \
- -e ${epoch}  -b ${batchSize} -g ${gpu} --filepath ${FP} \
---shuffle ${shuffle} --pretrained ${pretrained} --multilabel ${multilabel}
+## hyper-params ##
+epoch=100
+batchSize=32
+gpu=0
+shuffle=yes
+pretrained=0 <-- ここ (0ならばランダムベクトル, 1ならばfastTextによる事前学習の分散表現)
+multilabel=0
+model=XML-CNN ## XML-CNN, TRF-Single, TRF-Multi, TRF-Delay-Multi, or TRF-Sequential ##
 ```
