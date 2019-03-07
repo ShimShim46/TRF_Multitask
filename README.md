@@ -147,3 +147,15 @@ DIR=/mnt/WD_Blue/Multitask_master/Corpus/ACL/5test/20news
 trainData=${DIR}/20news_train.xml <-- ここ
 testData=${DIR}/20news_test1.xml <-- ここ
 ```
+マルチラベルのデータセット(RCV1コーパスなど)に変更した場合, 引数`--multilabel`に1を設定してください.
+
+```
+## hyper-params ##
+epoch=100
+batchSize=32
+gpu=0
+shuffle=yes
+pretrained=0
+multilabel=0 <-- ここ
+model=XML-CNN ## XML-CNN, TRF-Single, TRF-Multi, TRF-Delay-Multi, or TRF-Sequential ##
+```
