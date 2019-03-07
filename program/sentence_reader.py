@@ -1,15 +1,16 @@
-import math
 import collections
-import numpy as np
+import math
 import pdb
-from collections import defaultdict
 import sys
-import lxml.etree as et
-from tqdm import tqdm
+from collections import defaultdict
 from itertools import chain
 
+import lxml.etree as et
+import numpy as np
 from context2vec.common.defs import Toks
-from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.tokenize import sent_tokenize, word_tokenize
+from tqdm import tqdm
+
 MAX_SENTENCE_LEN = 10
 
 def convert_numeric_data(data, batchsize, word2index,max_len):
@@ -51,7 +52,7 @@ def convert_sentences(sentences_dic, max_sentence_len=MAX_SENTENCE_LEN):
     joint_positions = []
 
     for i,sent in enumerate(sorted(sentences_dic.items(), key=lambda x:x[0])):
-        if len(sent[1]['context']) >= 1: ## 何らかの文があるとき
+        if len(sent[1]['context']) >= 1:
             joint_context.append(sent[1]['context'])
             joint_keys.append(sent[1]['keys'])
             joint_answers.append(sent[1]['answers'])
@@ -203,5 +204,3 @@ class SentenceReaderDir(object):
             ind = len(self.word2index)
             self.word2index[wsdtag] = ind
             self.index2word[ind] = wsdtag
-
-

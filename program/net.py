@@ -11,8 +11,8 @@ import numpy as np
 from chainer import cuda, reporter
 from chainer.dataset import convert
 from gensim.models import KeyedVectors
-from sklearn.preprocessing import LabelEncoder ## single label encoder
-from sklearn.preprocessing import MultiLabelBinarizer ## multi label encoder
+from sklearn.preprocessing import LabelEncoder  # # single label encoder
+from sklearn.preprocessing import MultiLabelBinarizer  # # multi label encoder
 
 from pyfasttext import FastText
 
