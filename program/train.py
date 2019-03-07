@@ -220,7 +220,7 @@ def parse_arguments():
 
     parser.add_argument('--shuffle',default='no', type=str, choices=['yes','no'])
 
-    parser.add_argument('--pretrained',choices=[0,1,2], type=int)
+    parser.add_argument('--pretrained',choices=[0,1], type=int)
 
     parser.add_argument('--multilabel', '-ml', type=int, choices=[0,1])
 
