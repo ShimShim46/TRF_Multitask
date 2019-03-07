@@ -483,10 +483,11 @@ class Transformer(chainer.Chain):
 
         if get_prediction is False:
             if not((self.model_type == "TRF-Sequential") and (self.wsd_model is None)):
-                t_txt = self.le.transform(list(chain(*sent['doc_category'])))
                 if self.multi_label == 1:
+                    t_txt = self.le.fit_transform(sent['doc_category'])
                     loss_tc =  F.sigmoid_cross_entropy(y_tc, self.xp.array(t_txt))
                 elif self.multi_label == 0:
+                    t_txt = self.le.transform(list(chain(*sent['doc_category'])))
                     loss_tc = F.softmax_cross_entropy(y_tc, self.xp.array(t_txt))
 
             if self.model_type == "TRF-Single":

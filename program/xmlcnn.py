@@ -84,7 +84,7 @@ class XMLCnn(chainer.Chain):
                 x = self.xp.array(sent['indexed_text']) ## index化された文書
 
                 if self.mutli_label == 1:
-                    t_txt = self.mlb.fit_transform(sent['doc_category'])
+                    t_txt = self.le.fit_transform(sent['doc_category'])
                 elif self.mutli_label == 0:
                     t_txt = self.le.transform(list(chain(*sent['doc_category'])))
 

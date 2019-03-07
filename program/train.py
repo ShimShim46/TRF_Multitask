@@ -86,10 +86,10 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
             if is_multi_label == 1:
                 preds_tc = F.sigmoid(preds_tc)
                 indexes, ind_label = np.where((chainer.cuda.to_cpu(preds_tc.data) >= 0.5)) ##しきい値(0.5)を超えたら
-                converted_label = np.array(model.mlb.classes)[ind_label]
+                converted_label = np.array(model.le.classes)[ind_label]
                 for i,j in zip(indexes, converted_label):
                     preds_tc_label_list[i].append(j)
-                    netouts_txt.extend(preds_tc_label_list)
+                netouts_txt.extend(preds_tc_label_list)
             elif is_multi_label == 0:
                 preds_tc = F.softmax(preds_tc) ## 文書ラベルの方をsoftmaxで活性化
                 indexes = chainer.cuda.to_cpu(F.argmax(preds_tc,axis=1).data).tolist()
@@ -118,8 +118,9 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         ## F値の計算 ##
         ## 文書分類 ##
         if is_multi_label == 1:
-            bin_pred_tc = model.mlb.fit_transform(netouts_txt)
-            bin_ans_tc = model.mlb.fit_transform(test_data['doc_category'])
+
+            bin_pred_tc = model.le.fit_transform(netouts_txt)
+            bin_ans_tc = model.le.fit_transform(test_data['doc_category'])
             micro_f1_tc = f1_score(y_pred=bin_pred_tc, y_true=bin_ans_tc, average="micro")
             macro_f1_tc = f1_score(y_pred=bin_pred_tc, y_true=bin_ans_tc, average="macro")
             weighted_f1_tc = f1_score(y_pred=bin_pred_tc,y_true=bin_ans_tc, average="weighted")
@@ -151,9 +152,9 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
 
         result_file_txt_cat.write("Ground Truth\tPrediction\n")
         for i,j in zip(test_data["doc_category"], netouts_txt):
-            if len(i) >=2:
+            if is_multi_label == 1:
                 result_file_txt_cat.write(",".join(i) + "\t" + ",".join(j)+"\n")
-            else:
+            elif is_multi_label == 0:
                 result_file_txt_cat.write(i[0] + "\t" + j + "\n")
         result_file_txt_cat.close()
 
