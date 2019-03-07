@@ -4,7 +4,7 @@ valid_trainData=${DIR}/20news_train.xml
 valid_testData=${DIR}/20news_train.xml
 
 ## hyper-params ##
-epoch=100
+epoch=5
 batchSize=32
 gpu=0
 shuffle=yes
@@ -27,3 +27,5 @@ python program/opt_param.py -itrain ${valid_trainData}  -itest ${valid_testData}
 -e ${epoch}  -b ${batchSize} -g ${gpu} --filepath ${FP} \
 --shuffle ${shuffle} --pretrained ${pretrained} --multilabel ${multilabel} \
 --dbname ${dbname} --storagename ${storagename}
+
+mv ${model}_opt.db ${FP}

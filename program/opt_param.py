@@ -396,13 +396,14 @@ def objective(trial):
 
 
 if __name__ == "__main__":
+    num_of_trials = 2 ## n_trialsはhyper_parameterを探索する試行回数
     args = parse_argument()
     reader,train_data, test_data = prepare()
     study = optuna.Study(study_name=args.dbname, storage=args.storagename)
     if args.model == "TRF-Delay-Multi" or args.model == "TRF-Sequential":
-        study.optimize(objective, n_trials=20) ## n_trialsはhyper_parameterを探索する試行回数
+        study.optimize(objective, n_trials=num_of_trials)
     else:
-        study.optimize(objective, n_trials=20)
+        study.optimize(objective, n_trials=num_of_trials)
 
     with open(args.filepath + "/opt_result.txt", mode='w') as f:
         f.write('Number of finished trials: {}'.format(len(study.trials)) + "\n")
