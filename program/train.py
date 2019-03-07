@@ -6,6 +6,7 @@ import math
 import pdb
 import random
 import sys
+import os
 from itertools import chain
 
 import chainer
@@ -78,7 +79,7 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
                 preds_tc = model(sent,None,epoch,True)
         elif model_type == "XML-CNN":
             preds_tc = model.estimate(sent)
-        
+
         ## 文書分類ラベルの変換 ##
         if not preds_tc is None:
             preds_tc_label_list = [[] for i in range(preds_tc.shape[0])]
@@ -277,23 +278,45 @@ def objective(args):
 
     if 'TRF' in args.model: 
         if args.model == 'TRF-Single':
-            head = 5
-            hopping = 1
-            wsd_epoch = 0
-            weight_decay = 1.4248358746328444e-10
+            db_path = args.filepath + "/" + args.model + "_opt.db"
+            if os.path.exists(db_path):
+                study = optuna.create_study(study_name=args.model, storage="sqlite:///" + db_path, load_if_exists=True)
+                out_channels = study.best_params['out_channels']
+                filter_size = study.best_params['filter_size']
+                weight_decay = study.best_params['weight_decay']
+            else:
+                head = 5
+                hopping = 1
+                wsd_epoch = 0
+                weight_decay = 1.4248358746328444e-10
 
 
         elif args.model == 'TRF-Multi':
-            head = 10
-            hopping = 1
-            wsd_epoch = 0
-            weight_decay = 4.391898194731847e-08
+            db_path = args.filepath + "/" + args.model + "_opt.db"
+            if os.path.exists(db_path):
+                study = optuna.create_study(study_name=args.model, storage="sqlite:///" + db_path, load_if_exists=True)
+                out_channels = study.best_params['out_channels']
+                filter_size = study.best_params['filter_size']
+                weight_decay = study.best_params['weight_decay']
+            else:
+                head = 10
+                hopping = 1
+                wsd_epoch = 0
+                weight_decay = 4.391898194731847e-08
 
         elif args.model == 'TRF-Delay-Multi' or args.model == "TRF-Sequential":
-            head = 5
-            hopping = 1
-            wsd_epoch = 1 #75
-            weight_decay = 9.083672498965683e-08
+            db_path = args.filepath + "/" + args.model + "_opt.db"
+            if os.path.exists(db_path):
+                study = optuna.create_study(study_name=args.model, storage="sqlite:///" + db_path, load_if_exists=True)
+                pdb.set_trace()
+                out_channels = study.best_params['out_channels']
+                filter_size = study.best_params['filter_size']
+                weight_decay = study.best_params['weight_decay']
+            else:
+                head = 5
+                hopping = 1
+                wsd_epoch = 1 #75
+                weight_decay = 9.083672498965683e-08
 
         if args.model == "TRF-Sequential":
             model_wsd = Transformer(n_layers=hopping,n_source_vocab=len(reader.word2index), 
@@ -320,9 +343,16 @@ def objective(args):
 
     elif args.model == "XML-CNN":
         ## hyper params ##
-        out_channels = 128
-        filter_size = (4,5,6)
-        weight_decay = 0.000305318639612637
+        db_path = args.filepath + "/" + args.model + "_opt.db"
+        if os.path.exists(db_path):
+            study = optuna.create_study(study_name=args.model, storage="sqlite:///" + db_path, load_if_exists=True)
+            out_channels = study.best_params['out_channels']
+            filter_size = study.best_params['filter_size']
+            weight_decay = study.best_params['weight_decay']
+        else:
+            out_channels = 128
+            filter_size = (4,5,6)
+            weight_decay = 0.000305318639612637
         wsd_epoch = 0
         model = XMLCnn(doc_catgy=reader.doc_catgy, n_vocab=len(reader.word2index), emb_dim=emb_dim, 
         out_channels=out_channels, filter_size=filter_size, word2index=reader.word2index, pre_trained_embedding=pre_trained_embedding,
