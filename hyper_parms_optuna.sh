@@ -1,5 +1,5 @@
 #! /bin/bash
-DIR=/mnt/WD_Blue/Multitask_master/Corpus/ACL/5test/20news
+DIR=./Data
 valid_trainData=${DIR}/20news_train.xml
 valid_testData=${DIR}/20news_train.xml
 
