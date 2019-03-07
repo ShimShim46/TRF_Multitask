@@ -7,6 +7,8 @@ epoch=100
 batchSize=32
 gpu=0
 shuffle=yes
+pretrained=0
+multilabel=0
 model=XML-CNN
 
 testData=${DIR}/20news_test1.xml
@@ -17,5 +19,5 @@ mkdir -p ${FP}
 
 python program/train.py -itrain ${trainData}  -itest ${testData} -m ${model}  \
  -e ${epoch}  -b ${batchSize} -g ${gpu} --filepath ${FP} \
---shuffle ${shuffle} --pretrained 0 --multilabel 0
+--shuffle ${shuffle} --pretrained ${pretrained} --multilabel ${multilabel}
 
