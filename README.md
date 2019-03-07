@@ -46,6 +46,9 @@
 
 ## ディレクトリ構造
 ```
+|--Data ## データ(20news groupコーパス)
+|  |--20news_train.xml ## 訓練データ
+|  |--20news_test1.xml ## テストデータ
 |--README.md ## README
 |--RESULT_TRF-Delay-Multi ## TRF-Delay-Multiの結果保存ディレクトリ
 |  |--TRF-Delay-Multi_opt.db ## TRF-Delay-MultiのOptunaの最適化データベース
