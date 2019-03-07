@@ -8,7 +8,7 @@ epoch=100
 batchSize=32
 gpu=0
 shuffle=yes
-model=XML-CNN
+model=TRF-Multi
 
 testData=${DIR}/20news_test1.xml
 

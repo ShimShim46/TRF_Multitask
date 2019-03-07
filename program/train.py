@@ -30,6 +30,7 @@ from sentence_reader import (SentenceReaderDir, convert_numeric_data, load_xml)
 
 chainer.config.cudnn_deterministic = True
 chainer.config.use_cudnn = 'never'
+MAX_SEN_LEN = 100
 
 
 
@@ -139,8 +140,8 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         print ("Accuracy\t{}".format(accuracy_tc))
 
 
-        result_file_txt_cat = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_single_TXT_CAT", mode="w")
-        result_file_fscore = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_fscore", mode="w")
+        result_file_txt_cat = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_TC", mode="w")
+        result_file_fscore = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_TC_fscore", mode="w")
 
         result_file_fscore.write("Micro F1\t" + str(micro_f1_tc) + "\n")
         result_file_fscore.write("Macro F1\t" + str(macro_f1_tc) + "\n")
@@ -150,7 +151,10 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
 
         result_file_txt_cat.write("Ground Truth\tPrediction\n")
         for i,j in zip(test_data["doc_category"], netouts_txt):
-            result_file_txt_cat.write(",".join(i) + "\t" + ",".join(j)+"\n")
+            if len(i) >=2:
+                result_file_txt_cat.write(",".join(i) + "\t" + ",".join(j)+"\n")
+            else:
+                result_file_txt_cat.write(i[0] + "\t" + j + "\n")
         result_file_txt_cat.close()
 
     if not preds_wsd is None:
@@ -169,16 +173,17 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         print ("Accuracy\t{}".format(accuracy_wsd))
 
         result_file_fscore = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_WSD_fscore", mode="w")
-        result_file_s = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_WSD", mode="w")
+        result_file_wsd = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_WSD", mode="w")
         result_file_fscore.write("Micro F1\t" + str(micro_f1_wsd) + "\n")
         result_file_fscore.write("Macro F1\t" + str(macro_f1_wsd) + "\n")
         result_file_fscore.write("Weighted F1\t" + str(weighted_f1_wsd) + "\n")
         result_file_fscore.write("Accuracy\t" + str(accuracy_wsd) + "\n")
         result_file_fscore.close()
 
+        result_file_wsd.write("Grouned Truth\tPrediction\n")
         for i,k in zip(ans_wsd, netouts_wsd):
-            result_file_s.write(i + " " + k + "\n")
-        result_file_s.close()
+            result_file_wsd.write(i + "\t" + k + "\n")
+        result_file_wsd.close()
 
     print ("-"*50)
     print("")
@@ -246,7 +251,7 @@ def prepare():
     print('n_vocab: %d' % (len(reader.word2index)-3)) # excluding the three special tokens
     print('corpus size: %d' % (reader.total_words))
 
-    max_sen_len = 100
+    max_sen_len = MAX_SEN_LEN
     train_data = convert_numeric_data(reader.data, args.batchsize, reader.word2index, max_sen_len)
     test_data, freq, _ = load_xml(args.intestdata)
     test_data = convert_numeric_data(test_data, args.batchsize, reader.word2index, max_sen_len)
@@ -293,20 +298,20 @@ def objective(args):
             model_wsd = Transformer(n_layers=hopping,n_source_vocab=len(reader.word2index), 
             n_units=emb_dim, catgy = reader.catgy, doc_catgy = reader.doc_catgy, 
             senseid2netout=reader.senseid2netout,model_type=args.model,
-            word2index=reader.word2index, multi_label= args.multi_label, 
+            word2index=reader.word2index, multi_label= args.multilabel, 
             pre_trained_embedding = pre_trained_embedding,
             wsd_epoch=wsd_epoch,h=head, dropout=0.1,max_length=100)
             model_tc = Transformer(n_layers=hopping,n_source_vocab=len(reader.word2index), 
                 n_units=emb_dim, catgy = reader.catgy, doc_catgy = reader.doc_catgy, 
                 senseid2netout=reader.senseid2netout,model_type=args.model,
-                word2index=reader.word2index, multi_label= args.multi_label,
+                word2index=reader.word2index, multi_label= args.multilabel,
                 pre_trained_embedding = pre_trained_embedding,
                 wsd_epoch=wsd_epoch,h=head, dropout=0.1,max_length=100,wsd_model=model_wsd)
         else:
             model = Transformer(n_layers=hopping,n_source_vocab=len(reader.word2index), 
                 n_units=emb_dim, catgy = reader.catgy, doc_catgy = reader.doc_catgy, 
                 senseid2netout=reader.senseid2netout,model_type=args.model,
-                word2index=reader.word2index, multi_label = args.multi_label,
+                word2index=reader.word2index, multi_label = args.multilabel,
                 pre_trained_embedding = pre_trained_embedding,
                 wsd_epoch=wsd_epoch,h=head, dropout=0.1,max_length=100)
 
@@ -319,8 +324,8 @@ def objective(args):
         weight_decay = 0.000305318639612637
         wsd_epoch = 0
         model = XMLCnn(doc_catgy=reader.doc_catgy, n_vocab=len(reader.word2index), emb_dim=emb_dim, 
-        out_channels=out_channels, filter_size=filter_size, word2index=reader.word2index, multi_label = args.multi_label,
-        pre_trained_embedding=pre_trained_embedding)
+        out_channels=out_channels, filter_size=filter_size, word2index=reader.word2index, pre_trained_embedding=pre_trained_embedding,
+        multi_label= args.multilabel)
     else:
         raise Exception('Unknown context type: {}'.format(args.model))
 
@@ -401,7 +406,7 @@ def objective(args):
 
             ## Test ##
             with chainer.using_config('train',False):
-                estimate_test(test_data, reader, epoch, file_path, args.model, model, args.multi_label)
+                estimate_test(test_data, reader, epoch, file_path, args.model, model, args.multilabel)
 
 
 if __name__ == "__main__":
