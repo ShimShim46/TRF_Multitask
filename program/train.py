@@ -282,8 +282,8 @@ def objective(args):
             wsd_epoch = 0
             if os.path.exists(db_path):
                 study = optuna.create_study(study_name=args.model, storage="sqlite:///" + db_path, load_if_exists=True)
-                head = study.best_params['out_channels']
-                hopping = study.best_params['filter_size']
+                head = study.best_params['num_of_head']
+                hopping = study.best_params['hopping']
                 weight_decay = study.best_params['weight_decay']
             else:
                 head = 5
@@ -297,8 +297,8 @@ def objective(args):
             wsd_epoch = 0
             if os.path.exists(db_path):
                 study = optuna.create_study(study_name=args.model, storage="sqlite:///" + db_path, load_if_exists=True)
-                head = study.best_params['out_channels']
-                hopping = study.best_params['filter_size']
+                head = study.best_params['num_of_head']
+                hopping = study.best_params['hopping']
                 weight_decay = study.best_params['weight_decay']
             else:
                 head = 10
@@ -310,8 +310,8 @@ def objective(args):
             db_path = args.filepath + "/" + args.model + "_opt.db" ### TRF-Delay-MultiとTRF-Sequentialは同じパラメータ
             if os.path.exists(db_path):
                 study = optuna.create_study(study_name="TRF-Delay-Multi", storage="sqlite:///" + db_path, load_if_exists=True)
-                head = study.best_params['out_channels']
-                hopping = study.best_params['filter_size']
+                head = study.best_params['num_of_head']
+                hopping = study.best_params['hopping']
                 weight_decay = study.best_params['weight_decay']
                 wsd_epoch = study.best_params['wsd_epoch']
             else:
