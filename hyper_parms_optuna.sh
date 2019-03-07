@@ -4,13 +4,13 @@ valid_trainData=${DIR}/20news_train.xml
 valid_testData=${DIR}/20news_train.xml
 
 ## hyper-params ##
-epoch=5
+epoch=1
 batchSize=32
 gpu=0
 shuffle=yes
 pretrained=0
 multilabel=0
-model=XML-CNN
+model=TRF-Delay-Multi
 ### 上の設定は本訓練でも同じにすること ##
 
 ## データベースの設定 ##
