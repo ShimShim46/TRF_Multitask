@@ -134,24 +134,6 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         print ("Macro F1\t{}".format(macro_f1_tc))
         print ("Accuracy\t{}".format(accuracy_tc))
 
-
-        result_file_txt_cat = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_TC", mode="w")
-        result_file_fscore = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_TC_fscore", mode="w")
-
-        result_file_fscore.write("Micro F1\t" + str(micro_f1_tc) + "\n")
-        result_file_fscore.write("Macro F1\t" + str(macro_f1_tc) + "\n")
-        result_file_fscore.write("Weighted F1\t" + str(weighted_f1_tc) + "\n")
-        result_file_fscore.write("Accuracy\t" + str(accuracy_tc) + "\n")
-        result_file_fscore.close()
-
-        result_file_txt_cat.write("Ground Truth\tPrediction\n")
-        for i,j in zip(test_data["doc_category"], netouts_txt):
-            if is_multi_label == 1:
-                result_file_txt_cat.write(",".join(i) + "\t" + ",".join(j)+"\n")
-            elif is_multi_label == 0:
-                result_file_txt_cat.write(i[0] + "\t" + j + "\n")
-        result_file_txt_cat.close()
-
     if not preds_wsd is None:
 
         ## WSD ##
@@ -166,19 +148,6 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         print ("Micro F1\t{}".format(micro_f1_wsd))
         print ("Macro F1\t{}".format(macro_f1_wsd))
         print ("Accuracy\t{}".format(accuracy_wsd))
-
-        result_file_fscore = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_WSD_fscore", mode="w")
-        result_file_wsd = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_WSD", mode="w")
-        result_file_fscore.write("Micro F1\t" + str(micro_f1_wsd) + "\n")
-        result_file_fscore.write("Macro F1\t" + str(macro_f1_wsd) + "\n")
-        result_file_fscore.write("Weighted F1\t" + str(weighted_f1_wsd) + "\n")
-        result_file_fscore.write("Accuracy\t" + str(accuracy_wsd) + "\n")
-        result_file_fscore.close()
-
-        result_file_wsd.write("Grouned Truth\tPrediction\n")
-        for i,k in zip(ans_wsd, netouts_wsd):
-            result_file_wsd.write(i + "\t" + k + "\n")
-        result_file_wsd.close()
 
     print ("-"*50)
     print("")
@@ -396,7 +365,7 @@ def objective(trial):
 
 
 if __name__ == "__main__":
-    num_of_trials = 2 ## n_trialsはhyper_parameterを探索する試行回数
+    num_of_trials = 1 ## n_trialsはhyper_parameterを探索する試行回数
     args = parse_argument()
     reader,train_data, test_data = prepare()
     study = optuna.Study(study_name=args.dbname, storage=args.storagename)
