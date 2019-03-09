@@ -207,7 +207,6 @@ class SentenceReaderDir(object):
         index2word = {0:'<UNK>'}
         word2index = {'<UNK>': 0}
         unknown_counts = 0
-        pdb.set_trace()
         for word, count in sorted(word2count.items()):
             ind = len(word2index)
             word2index[word] = ind
