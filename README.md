@@ -1,9 +1,9 @@
-語義の曖昧さ解消とのマルチタスク学習に基づく文書の自動分類
+Text Categorization by Learning Predominant Sense of Words as Auxiliary Task
 ==
-このコードでは次の5種類のモデルが利用できます:
+There are five models:
 
-* XML-CNN ([Liu+ '17](http://nyc.lti.cs.cmu.edu/yiming/Publications/jliu-sigir17.pdf)) : Liuら'17 の提案したモデル
-* TRF-Single: Transformer Encoderを用いて文書行列を作成, 文書分類タスクのみを学習
+* XML-CNN ([Liu+ '17](http://nyc.lti.cs.cmu.edu/yiming/Publications/jliu-sigir17.pdf)) : XML-CNN proposed by Liu'17 et al.
+* TRF-Single: A text categorization based on the transformer but without domain-specific sense prediction.
 * TRF-Multi: Transformer Encoderを用いて文書行列を作成, 語義の曖昧さ解消タスクと文書分類タスクを同時に学習
 * TRF-Delay-Multi: Transformer Encoderを用いて文書行列を作成, 語義の曖昧さ解消タスクを先行して学習, その後文書分類タスクと統合しマルチタスク学習
 * TRF-Sequential: Transformer Encoderを用いて文書行列を作成, 語義の曖昧さ解消タスクを学習, その後文書分類タスクをシングルタスクとして学習
