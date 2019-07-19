@@ -29,7 +29,7 @@ chainer.config.cudnn_deterministic = True
 chainer.config.use_cudnn = 'never'
 MAX_SEN_LEN = 100
 
-## 推論 ##
+## Estimation ##
 def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_label, best_mic, best_mac):
    
     print ("")
@@ -39,9 +39,9 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
 
 
     test_data_size = len(test_data['indexed_text'])
-    netouts_txt = [] ## 文書分類の結果
-    netouts_wsd = [] ## WSDの結果
-    network_output_order = [i[0] for i in sorted(dict(reader.catgy).items(), key=lambda x: x[1])] ## wsdの予測順(ニューロンの順番)
+    netouts_txt = [] ## Results of text categorization
+    netouts_wsd = [] ## Results of predominant word senses
+    network_output_order = [i[0] for i in sorted(dict(reader.catgy).items(), key=lambda x: x[1])] ## The output of predominant word sense prediction
 
     is_multi_task = 0
     if "Multi" in model_type.split("-"):
@@ -72,24 +72,24 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         elif model_type == "XML-CNN":
             preds_tc = model.estimate(sent)
 
-        ## 文書分類ラベルの変換 ##
+        ## Prediction of text label ##
         if not preds_tc is None:
             preds_tc_label_list = [[] for i in range(preds_tc.shape[0])]
 
             if is_multi_label == 1:
                 preds_tc = F.sigmoid(preds_tc)
-                indexes, ind_label = np.where((chainer.cuda.to_cpu(preds_tc.data) >= 0.5)) ##しきい値(0.5)を超えたら
+                indexes, ind_label = np.where((chainer.cuda.to_cpu(preds_tc.data) >= 0.5)) ## Threshold is 0.5.
                 converted_label = np.array(model.le.classes)[ind_label]
                 for i,j in zip(indexes, converted_label):
                     preds_tc_label_list[i].append(j)
                 netouts_txt.extend(preds_tc_label_list)
             elif is_multi_label == 0:
-                preds_tc = F.softmax(preds_tc) ## 文書ラベルの方をsoftmaxで活性化
+                preds_tc = F.softmax(preds_tc) ## text label
                 indexes = chainer.cuda.to_cpu(F.argmax(preds_tc,axis=1).data).tolist()
                 converted_label = model.le.inverse_transform(indexes).tolist()
                 netouts_txt.extend(converted_label)
 
-        # WSDのラベル変換 ##
+        # Prediction of predominant word senses ##
         if not preds_wsd is None:
             unfold_labels = chain(*labels)
             for t,p in zip(unfold_labels, preds_wsd):
@@ -108,8 +108,8 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
 
     if not preds_tc is None:
 
-        ## F値の計算 ##
-        ## 文書分類 ##
+        ## Computation of F-score ##
+        ## Text Categorization ##
         if is_multi_label == 1:
 
             bin_pred_tc = model.le.fit_transform(netouts_txt)
@@ -134,8 +134,8 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         print ("Accuracy\t{}".format(accuracy_tc))
 
     if not preds_wsd is None:
-        ## F値の計算 ##
-        ## WSD ##
+        ## Computation of F-score ##
+        ## Predominant word senses ##
         ans_wsd = [label for label in chain(*test_data['labels']) if label != "<PAD>"]
         assert len(ans_wsd) == len(netouts_wsd)
         micro_f1_wsd = f1_score(y_pred=netouts_wsd, y_true=ans_wsd ,average="micro")
@@ -158,7 +158,7 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
 
     return best_mic, best_mac
     
-## 引数の受け取り ##
+## Arguments setting ##
 def parse_argument():
 
     parser = argparse.ArgumentParser() 
@@ -209,7 +209,7 @@ def parse_argument():
 
     return args
 
-## データの読み込み ##
+## Read data ##
 def prepare():
     if args.gpu >= 0:
         cuda.check_cuda_available()
@@ -228,14 +228,14 @@ def prepare():
     return reader, train_data, test_data
 
 
-## 訓練 ##
+## Training ##
 def objective(trial):
 
-    emb_dim = 100 ##これはHEADの数が関係するので今回は固定
+    emb_dim = 100 
     pre_trained_embedding = None
     use_pretrained = None
 
-    ## 事前学習済みの分散表現を利用するかどうか ##
+    ## You can use pre-training word embedding model ##
     if args.pretrained ==1:
         use_pretrained = reader.word2index
         pre_trained_embedding = "./embedding/rcv1_8_org.model.bin"
@@ -302,7 +302,7 @@ def objective(trial):
     else:
         loop = 1
 
-    ## 全体の処理 (sequentialのみ2回ループ, 他は1ループ)##
+    ## Whole processing ##
     for i in range(loop):
         if args.model == "TRF-Sequential":
             if i == 0:
@@ -362,11 +362,11 @@ def objective(trial):
             with chainer.using_config('train',False):
                 best_mic, best_mac = estimate_test(test_data, reader, epoch, file_path, args.model, model, args.multilabel, best_mic, best_mac)
 
-    return 1 - best_mic ## microが最小になるように
+    return 1 - best_mic ## to minimize micro value
 
 
 if __name__ == "__main__":
-    num_of_trials = 20 ## n_trialsはhyper_parameterを探索する試行回数
+    num_of_trials = 20 
     args = parse_argument()
     reader,train_data, test_data = prepare()
     study = optuna.Study(study_name=args.dbname, storage=args.storagename)

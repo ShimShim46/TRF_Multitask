@@ -13,9 +13,8 @@ from tqdm import tqdm
 MAX_SENTENCE_LEN = 10
 
 """
-データを数値に変換する関数
-<PAD>: Padding文字
-<UNK>: 未知語
+<PAD>: Padding character
+<UNK>: unknown word
 """
 def convert_numeric_data(data, batchsize, word2index,max_len):
     converted_data = {"indexed_text":[], "labels":[],"positions":[], "keys":[], "doc_category":[]}
@@ -49,7 +48,7 @@ def convert_numeric_data(data, batchsize, word2index,max_len):
     return converted_data
 
 """
-1文書を1行に変換する関数
+conversion of one document to one line
 """
 def convert_sentences(sentences_dic, max_sentence_len=MAX_SENTENCE_LEN):
 
@@ -76,14 +75,14 @@ def convert_sentences(sentences_dic, max_sentence_len=MAX_SENTENCE_LEN):
 
 
 """
-XMLファイルを読み込む関数
-<PAD>: Padding文字
-pos: 品詞
-lemma: 原形
-context: 本文
-instanceが語義解消単語
-wfがその他の単語
-goldAnsが正解の語義
+XML file read
+<PAD>: Padding character
+pos: part-of-speech
+lemma: lemma
+context: contents
+instance indicates a target word of predominant sense detection
+wf shows a word not a target word
+goldAns shows correct predominant sense
 """
 def load_xml(path):
 
@@ -137,7 +136,7 @@ def load_xml(path):
 
 
 """
-データを管理するクラス
+Data management class
 """
 class SentenceReaderDir(object):
 
@@ -148,17 +147,17 @@ class SentenceReaderDir(object):
         self.batchsize = batchsize
         self.trimmed_word2count, self.word2index, self.index2word = self.read_and_trim_vocab()
         self.total_words = sum(self.trimmed_word2count.values())
-        self.catgy = defaultdict( lambda: len(self.catgy) ) ##分類カテゴリ名とカテゴリ番号のマッピング
-        self.key2sid = {} ## key(単語の原形)とsense_id(語義)のマッピング
-        self.key2netout = {} ## key(単語の原形)とネットワークの出力層のユニット番号の対応
-        self.senseid2netout = {} ## sense_id(語義)とネットワークの出力層のユニット番号の対応
-        self.doc_catgy = defaultdict( lambda: len(self.doc_catgy) ) ##文書分類用のカテゴリ
-        self.make_catgy() ## 語義カテゴリを作成
+        self.catgy = defaultdict( lambda: len(self.catgy) ) ## mapping classification category to category id
+        self.key2sid = {} ## mapping key to sense_id
+        self.key2netout = {} ## correspondence between key and the unit id of the output layer
+        self.senseid2netout = {} ## correspondence between sense_id and the unit id of the output layer
+        self.doc_catgy = defaultdict( lambda: len(self.doc_catgy) ) ## category for text categorization
+        self.make_catgy() ## class of predominant word sense
         self.make_key2netout()
         self.add_wsdtag_to_vocab()
 
     """
-    語義カテゴリ全体を読み込む関数
+    Read predominant senses
     """
     def make_catgy(self):
 
@@ -187,7 +186,7 @@ class SentenceReaderDir(object):
             [self.catgy[sid] for sid in sents['answers'] if sid != "<PAD>"]
 
     """
-    語義と出力層のユニット番号の対応を作る関数
+    Make correspondence between predominant sense and the unit id of the output layer
     """
     def make_key2netout(self):
         for k,v in self.key2sid.items():
@@ -197,9 +196,8 @@ class SentenceReaderDir(object):
 
 
     """
-    語彙を読み込む関数
-    <UNK>: 未知語
-    未知語の処理は今回はない.
+    Read words
+    <UNK>: unknown word if there are exist
     """
     def read_and_trim_vocab(self, trimfreq=0):
         word2count = self.word_freq
@@ -218,7 +216,7 @@ class SentenceReaderDir(object):
         return trimmed_word2count, word2index, index2word
     
     """
-    語義を語彙に追加する関数.
+    Add predominant sense to words
     """
     def add_wsdtag_to_vocab(self):
         for wsdtag in self.catgy.keys():

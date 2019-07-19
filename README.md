@@ -1,93 +1,92 @@
-語義の曖昧さ解消とのマルチタスク学習に基づく文書の自動分類
+Text Categorization by Learning Predominant Sense of Words as Auxiliary Task
 ==
-このコードでは次の5種類のモデルが利用できます:
+There are five models:
 
-* XML-CNN ([Liu+ '17](http://nyc.lti.cs.cmu.edu/yiming/Publications/jliu-sigir17.pdf)) : Liuら'17 の提案したモデル
-* TRF-Single: Transformer Encoderを用いて文書行列を作成, 文書分類タスクのみを学習
-* TRF-Multi: Transformer Encoderを用いて文書行列を作成, 語義の曖昧さ解消タスクと文書分類タスクを同時に学習
-* TRF-Delay-Multi: Transformer Encoderを用いて文書行列を作成, 語義の曖昧さ解消タスクを先行して学習, その後文書分類タスクと統合しマルチタスク学習
-* TRF-Sequential: Transformer Encoderを用いて文書行列を作成, 語義の曖昧さ解消タスクを学習, その後文書分類タスクをシングルタスクとして学習
+* XML-CNN ([Liu+ '17](http://nyc.lti.cs.cmu.edu/yiming/Publications/jliu-sigir17.pdf)) : XML-CNN proposed by Liu'17 et al.
+* TRF-Single: A text categorization model based on the transformer encoder but without domain-specific sense prediction.
+* TRF-Multi: A text categorization model based on the transformer encoder and is trained to simultaneously categorize texts and predicts a predominant sense for each word.
+* TRF-Delay-Multi: A text categorization model to start learning predominant sense model at first until the stable, and after that it adapts text categorization simultaneously.
+* TRF-Sequential: A text categorization model with fully separated training and TRF-Multi with fully simultaneously training.
 
 
-### 各モデルの特徴
+### Feature of each model
 
-|      特徴\モデル     | XML-CNN | TRF-Single | TRF-Multi |                        TRF-Delay-Multi                       |        TRF-Sequential       |
+|      Feature\Model     | XML-CNN | TRF-Single | TRF-Multi |                        TRF-Delay-Multi                       |        TRF-Sequential       |
 |:--------------------:|:-------:|:----------:|:---------:|:------------------------------------------------------------:|:---------------------------:|
 | Convolution?         |    ✔    |            |           |                                                              |                             |
-| Single-Task?         |    ✔    |      ✔     |           |                                                              | ✔(それぞれのタスクを順番に) |
-|      Multi-Task?     |         |            |     ✔     | ✔(先に語義の曖昧さ解消タスク,  途中から文書分類タスクと統合) |                             |
+| Single-Task?         |    ✔    |      ✔     |           |                                                              | ✔(To learn predominant sense model and text categorization separately) |
+|      Multi-Task?     |         |            |     ✔     | ✔(To learn predominant sense model at first until the stable, and after that it adapts text categorization simultaneously) |                             |
 | Transformer Encoder? |         |      ✔     |     ✔     |                               ✔                              |              ✔              |
 
 ## Requirements
-このコードを実行するために必要なライブラリのうち、代表的なものを次に示します。
-* Python 3.5.4 以降
-* Chainer 4.0.0 以降 ([chainer](http://chainer.org/))
-* CuPy 4.0.0 以降 ([cupy](https://cupy.chainer.org/))
-* Optuna 0.8.0 以降 ([optuna](https://optuna.org/))
+In order to run the code, I recommend the following environment.
+* Python 3.5.4 or higher.
+* Chainer 4.0.0 or higher. ([chainer](http://chainer.org/))
+* CuPy 4.0.0 or higher. ([cupy](https://cupy.chainer.org/))
+* Optuna 0.8.0 or higher.  ([optuna](https://optuna.org/))
 
-注意: 
-* 現在のコードのバージョンでは**GPU**を利用することが前提となっています。
-* コードを実行するために必要なライブラリの詳細はrequirements.txtをご参照ください。
+Requirements 
+* The code requires GPU environment. Please see requirements.txt to run my code.
 
 ## Installation
-* このページの **clone or download** からコードをダウンロード
-* requirements.txtに書かれたライブラリをインストールし、実行環境を構築
-* もし必要であれば、次の手順でAnaconda([anaconda](https://www.anaconda.com/enterprise/))による仮想環境を構築
-    1. [Anacondaのダウンロードページ](https://www.anaconda.com/download/)から自分の環境にあったものをインストール
-        * 例: Linux(x86アーキテクチャ, 64bit)にインストールする場合:
+* Download code from **clone or download**
+* Install the requirements: requirements.txt
+* You can also use Python data science platform, Anaconda([anaconda](https://www.anaconda.com/enterprise/)) as follows:
+    1. Download Anaconda from (https://www.anaconda.com/download/)
+        * Example: Anaconda 5.1 for Linux(x86 architecture, 64bit) Installer
             1. wget https://repo.continuum.io/archive/Anaconda3-5.1.0-Linux-x86_64.sh
-            1. bash Anaconda3-5.1.0-Linux-x86_64.sh
-            
-            でインストールできます。
-    3. Anacondaをインストール後、仮想環境を構築
-        ```conda env create -f=trf_multitask_env.yml```
-    4. ```source activate trf_multitask_env```　で仮想環境に切り替え
-    5. この環境内でコードを実行することが可能
+            2. bash Anaconda3-5.1.0-Linux-x86_64.sh
 
-## ディレクトリ構造
+    2. Create virtual environments with the Anaconda Python distribution
+        ```conda env create -f=trf_multitask_env.yml```
+    3. ```source activate trf_multitask_env```
+    4. You can run my programme code in this environment
+
+## Directory structure
 ```
-|--Data ## データ(20news groupコーパス)
-|  |--20news_train.xml ## 訓練データ
-|  |--20news_test1.xml ## テストデータ
+|--Data ## Data (20news group corpus)
+|  |--20news_train.xml ## Training data
+|  |--20news_test1.xml ## Test data
 |--README.md ## README
-|--RESULT_TRF-Delay-Multi ## TRF-Delay-Multiの結果保存ディレクトリ
-|  |--TRF-Delay-Multi_opt.db ## TRF-Delay-MultiのOptunaの最適化データベース
-|--RESULT_TRF-Multi ## TRF-Multiの結果保存ディレクトリ
-|  |--TRF-Multi_opt.db ## TRF-MultiのOptunaの最適化データベース
-|--RESULT_TRF-Sequential ## TRF-Sequentialの結果保存ディレクトリ
-|  |--TRF-Sequential_opt.db ## TRF-MultiのOptunaの最適化データベース
-|--RESULT_TRF-Single ## TRF-Singleの結果保存ディレクトリ
-|  |--TRF-Single_opt.db  ## TRF-SingleのOptunaの最適化データベース
-|--RESULT_XML-CNN  ## XML-CNNの結果保存ディレクトリ
-|  |--XML-CNN_opt.db  ## XML-CNNのOptunaの最適化データベース
-|--embedding  ## 事前学習済み分散表現をここに配置(初期は空ディレクトリ)
-|--hyper_parms_optuna.sh  ## Optunaによるハイパーパラメータの最適化を行うシェルスクリプト
-|--program  ## プログラム(Python)群
-|  |--__pycache__  ## キャッシュ
+|--RESULT_TRF-Delay-Multi ## Saving directory for TRF-Delay-Multi results
+|  |--TRF-Delay-Multi_opt.db ## Optimization database for TRF-Delay-Multi by Optuna
+|--RESULT_TRF-Multi ## Saving directory for TRF-Multi results
+|  |--TRF-Multi_opt.db ## Optimization database for TRF-Multi by Optuna
+|--RESULT_TRF-Sequential ## Saving directory for TRF-Sequential results
+|  |--TRF-Sequential_opt.db ## Optimization database for TRF-Multi by Optuna
+|--RESULT_TRF-Single ## Saving directory for TRF-Single results
+|  |--TRF-Single_opt.db  ## Optimization database for TRF-Single by Optuna
+|--RESULT_XML-CNN  ## Saving directory for XML-CNN results
+|  |--XML-CNN_opt.db  ## Optimization database for XML-CNN by Optuna
+|--embedding  ## Directory of word embedding
+|--hyper_parms_optuna.sh  ## shell script for optimizing hyper-parameters by Optuna
+|--program  ## Programmes (Python)
+|  |--__pycache__  ## cash
 |  |  |--net.cpython-35.pyc
 |  |  |--sentence_reader.cpython-35.pyc
 |  |  |--xmlcnn.cpython-35.pyc
-|  |--net.py  ##  TRF-XXXモデル(Single, Multi, Delay-Multi, Sequential)
-|  |--opt_param.py  ##  Optunaによるハイパーパラメータ最適化プログラム
-|  |--sentence_reader.py  ##  データの読み込みプログラム
-|  |--train.py  ##  本訓練プログラム
-|  |--xmlcnn.py  ## XML-CNNモデル
-|--training.sh  ## 本訓練を行うシェルスクリプト
+|  |--net.py  ##  TRF-XXX model (Single, Multi, Delay-Multi, Sequential)
+|  |--opt_param.py  ##  Hyper-parameters optimization Programme by Optuna
+|  |--sentence_reader.py  ##  programme for input data
+|  |--train.py  ##  programm for training
+|  |--xmlcnn.py  ## XML-CNN model
+|--training.sh  ## shall script for training
 
 ```
 
 ## Quick-start
-training.shを実行することでXML-CNNによる20news groupデータセットの文書分類タスクを実行できます.
+You can categorize sample data, 20news group by running training.sh, with XML-CNN.
 
-学習後の結果はCNNディレクトリに保存されます.
+The results are stored at CNN directory.
+
 * RESULT_XXX :
-    * RESULT_FILE_[N]EPOCH_TC: 文書分類タスクの正解とモデル予測結果
-    * RESULT_FILE_[N]EPOCH_TC_fscore: 文書分類タスクのF値
-    * RESULT_FILE_[N]EPOCH_WSD: 語義の曖昧さ解消タスクの正解とモデル予測結果
-    * RESULT_FILE_[N]EPOCH_WSD_fscore] 語義の曖昧さ解消タスクのF値
+    * RESULT_FILE_[N]EPOCH_TC: Results of model prediction and correct data for text categorization
+    * RESULT_FILE_[N]EPOCH_TC_fscore: F score of text categorization
+    * RESULT_FILE_[N]EPOCH_WSD: Results of model prediction and correct data for predominant word sense
+    * RESULT_FILE_[N]EPOCH_WSD_fscore] F-score of domain-specific sense identification
 
-### 学習モデルの変更
-```training.sh```内の ```model``` を変更することで学習するモデルを変更することができます.
+### Training model change
+You can change a training model by modifying the ```model``` in the file ```training.sh```
 ```                                                                                                                 
 ## hyper-params ##
 epoch=100
@@ -96,15 +95,16 @@ gpu=0
 shuffle=yes
 pretrained=0
 multilabel=0
-model=XML-CNN ## XML-CNN, TRF-Single, TRF-Multi, TRF-Delay-Multi, or TRF-Sequential ## <-ここ
+model=XML-CNN ## XML-CNN, TRF-Single, TRF-Multi, TRF-Delay-Multi, or TRF-Sequential ## <- change here
 ```
 
-### Optunaによるハイパーパラメータの最適化 ###
-````hyper_param_optuna.sh````を実行することでOptunaを使ったモデルのハイパーパラメータを最適化を行います.
-````hyper_param_optuna.sh````内の```model```を変更することで最適化するモデルを変更することができます.
-最適化したハイパーパラメータの結果は`RESULT_{モデル名}`ディレクトリ内の`{モデル名}_opt.db`に保存されます.
-`{モデル名}_opt.db`はデータベースですので, ハイパーパラメータの探索過程が保存されています.
-```                                                                                                                 
+### Optimization of Hyper-parameters by Optuna ###
+You can optimize hyper-parameters by running ````hyper_param_optuna.sh````.
+You can optimize any models by changing ```model``` in ````hyper_param_optuna.sh````.
+The results of the optimized hyper-parameters are stored `{model name}_opt.db` in the directory,
+`RESULT_{model name}`. Here, `{model name}_opt.db` is a database and
+the search process of the hyper parameters are stored in that file.
+
 ## hyper-params ##
 epoch=100
 batchSize=32
@@ -112,15 +112,14 @@ gpu=0
 shuffle=yes
 pretrained=0
 multilabel=0
-model=XML-CNN ## XML-CNN, TRF-Single, TRF-Multi, TRF-Delay-Multi, or TRF-Sequential ## <-ここ
-```
+model=XML-CNN ## XML-CNN, TRF-Single, TRF-Multi, TRF-Delay-Multi, or TRF-Sequential ## <- change here
 
 
-### 単語の分散表現について
+### Word embedding
 
-```training.sh```内の 引数`--pretrained`に0または1を設定することで利用する分散表現を変更します.
-* 0: ランダムベクトル
-* 1: RCV1コーパスを用いた分散表現(このコードでは単語の分散表現に[fastText](https://github.com/facebookresearch/fastText)の学習結果を利用しています)
+You can use random vectors or vectors obtained by RCV1 corpus as word embedding by setting the argument, 0 or 1 of `--pretrained` in the file ```training.sh```
+* 0: random vectors
+* 1: vectors obtained by RCV1 corpus (my code utilize word embedding obtained by [fastText](https://github.com/facebookresearch/fastText))
 
 ```
 ## hyper-params ##
@@ -128,29 +127,30 @@ epoch=100
 batchSize=32
 gpu=0
 shuffle=yes
-pretrained=0 <-- ここ (0ならばランダムベクトル, 1ならばfastTextによる事前学習の分散表現)
+pretrained=0 <-- change here (0 shows random vectors, 1 indicates word embedding obtained by fastText)
 multilabel=0
 model=XML-CNN ## XML-CNN, TRF-Single, TRF-Multi, TRF-Delay-Multi, or TRF-Sequential ##
 ```
 
-## データセットについて ##
+## Datasets ##
 
-デフォルトでは20news groupデータセットの学習を行います.
-Optunaの最適化, 本訓練の利用データを変更するには`hyper_params_opt.sh`, `training.sh`のデータパスを変更してください.
+20news group corpus is a default data. You can use your own data as
+validation and training data by changing datapath as below:
 
 `hyper_params_opt.sh`
 ```
 DIR=/mnt/WD_Blue/Multitask_master/Corpus/ACL/5test/20news
-valid_trainData=${DIR}/20news_train.xml <-- ここ
-valid_testData=${DIR}/20news_train.xml <--　ここ
+valid_trainData=${DIR}/20news_train.xml <-- change here
+valid_testData=${DIR}/20news_train.xml <--　change here
 ```
 `training.sh`
 ```
 DIR=/mnt/WD_Blue/Multitask_master/Corpus/ACL/5test/20news
-trainData=${DIR}/20news_train.xml <-- ここ
-testData=${DIR}/20news_test1.xml <-- ここ
+trainData=${DIR}/20news_train.xml <-- change here
+testData=${DIR}/20news_test1.xml <-- change here
 ```
-マルチラベルのデータセット(RCV1コーパスなど)に変更した場合, 引数`--multilabel`に1を設定してください.
+When you use multi-labeled dataset such as RCV1 corpus, please set the argument `--multilabel` to 1.
+
 
 ```
 ## hyper-params ##
@@ -159,28 +159,8 @@ batchSize=32
 gpu=0
 shuffle=yes
 pretrained=0
-multilabel=0 <-- ここ
+multilabel=0 <-- change here
 model=XML-CNN ## XML-CNN, TRF-Single, TRF-Multi, TRF-Delay-Multi, or TRF-Sequential ##
 ```
 
 
-## プログラムの動作確認方法 ##
-プログラム中の各関数がどういった処理を行うのかわからない時には
-pythonデバッガ `pdb`を利用することを強く勧めます.
-`pdb`を使うことでプログラム中にブレークポイントを設定し対話形式でプログラムをステップ実行できます.
-### pdbの使い方 ###
-`import pdb`
-プログラムの止めたいところ(ブレークポイント)で`pdb.set_trace()`をプログラムに書き込みます.
-通常通りにプログラムを実行するとブレークポイントでプログラムが停止します.
-変数の確認やステップ実行を対話形式で行えるので,print文でデバッグするよりも簡単で効率的です.
-使い方は次の表のとおりです. (https://qiita.com/mazu/items/88ef749cad4f57fe4536 より引用)
-
-|  コマンド  |                       説明                      |
-|:----------:|:-----------------------------------------------:|
-|   s(tep)   |                                    ステップイン |
-|   n(ext)   |                                ステップオーバー |
-|   l(ist)   | 現在行の前後のソースコードを表示. 矢印が現在行. |
-|   a(rgs)   |                        現在いる関数の引数を表示 |
-|  p(print)  |                                        プリント |
-| c(ontinue) |                    次のブレイクポイントまで実行 |
-|      ?     |                                          ヘルプ |
