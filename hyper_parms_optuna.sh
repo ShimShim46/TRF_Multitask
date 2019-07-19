@@ -11,9 +11,9 @@ shuffle=yes
 pretrained=0
 multilabel=0
 model=TRF-Delay-Multi
-### 上の設定は本訓練でも同じにすること ##
+### The above setting is the same when you train the model ##
 
-## データベースの設定 ##
+## Setting of the database ##
 dbname=${model}
 storagename="sqlite:///"${model}"_opt.db"
 

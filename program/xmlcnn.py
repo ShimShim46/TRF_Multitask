@@ -81,7 +81,7 @@ class XMLCnn(chainer.Chain):
         self.embedding.disable_update()
         with chainer.using_config('use_cudnn', 'never'):
             with chainer.using_config('cudnn_deterministic', True):
-                x = self.xp.array(sent['indexed_text']) ## index化された文書
+                x = self.xp.array(sent['indexed_text']) 
 
                 if self.mutli_label == 1:
                     t_txt = self.le.fit_transform(sent['doc_category'])

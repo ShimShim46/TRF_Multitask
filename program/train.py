@@ -35,9 +35,8 @@ MAX_SEN_LEN = 100
 
 
 
-## 推論 ##
+## Estimation ##
 def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_label):
-    ## 推論 ##
     print ("")
     print ("-"*50)
     print ("Estimate")
@@ -45,9 +44,9 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
 
 
     test_data_size = len(test_data['indexed_text'])
-    netouts_txt = [] ## 文書分類の結果
-    netouts_wsd = [] ## WSDの結果
-    network_output_order = [i[0] for i in sorted(dict(reader.catgy).items(), key=lambda x: x[1])] ## wsdの予測順(ニューロンの順番)
+    netouts_txt = [] ## Results of text categorization
+    netouts_wsd = [] ## Results of predominant word senses
+    network_output_order = [i[0] for i in sorted(dict(reader.catgy).items(), key=lambda x: x[1])] ##  The output of predominant word sense prediction
 
     is_multi_task = 0
     if "Multi" in model_type.split("-"):
@@ -80,24 +79,24 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         elif model_type == "XML-CNN":
             preds_tc = model.estimate(sent)
 
-        ## 文書分類ラベルの変換 ##
+        ## Prediction of text label ##
         if not preds_tc is None:
             preds_tc_label_list = [[] for i in range(preds_tc.shape[0])]
 
             if is_multi_label == 1:
                 preds_tc = F.sigmoid(preds_tc)
-                indexes, ind_label = np.where((chainer.cuda.to_cpu(preds_tc.data) >= 0.5)) ##しきい値(0.5)を超えたら
+                indexes, ind_label = np.where((chainer.cuda.to_cpu(preds_tc.data) >= 0.5)) ## Threshold is 0.5.
                 converted_label = np.array(model.le.classes)[ind_label]
                 for i,j in zip(indexes, converted_label):
                     preds_tc_label_list[i].append(j)
                 netouts_txt.extend(preds_tc_label_list)
             elif is_multi_label == 0:
-                preds_tc = F.softmax(preds_tc) ## 文書ラベルの方をsoftmaxで活性化
+                preds_tc = F.softmax(preds_tc) ## text label
                 indexes = chainer.cuda.to_cpu(F.argmax(preds_tc,axis=1).data).tolist()
                 converted_label = model.le.inverse_transform(indexes).tolist()
                 netouts_txt.extend(converted_label)
 
-        # WSDのラベル変換 ##
+        # Prediction of predominant word senses ##
         if not preds_wsd is None:
             unfold_labels = chain(*labels)
             for t,p in zip(unfold_labels, preds_wsd):
@@ -116,8 +115,8 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
 
     if not preds_tc is None:
 
-        ## F値の計算 ##
-        ## 文書分類 ##
+        ## Computation of F-score ##
+        ## Text Categorization ##
         if is_multi_label == 1:
 
             bin_pred_tc = model.le.fit_transform(netouts_txt)
@@ -141,7 +140,6 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         print ("Macro F1\t{}".format(macro_f1_tc))
         print ("Accuracy\t{}".format(accuracy_tc))
 
-        ## ファイルの書き出し ##
         result_file_txt_cat = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_TC", mode="w")
         result_file_fscore = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_TC_fscore", mode="w")
 
@@ -160,8 +158,8 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         result_file_txt_cat.close()
 
     if not preds_wsd is None:
-        ## F値の計算 ##
-        ## WSD ##
+        ## Computation of F-score ##
+        ## Predominant word senses ##
         ans_wsd = [label for label in chain(*test_data['labels']) if label != "<PAD>"]
         assert len(ans_wsd) == len(netouts_wsd)
         micro_f1_wsd = f1_score(y_pred=netouts_wsd, y_true=ans_wsd ,average="micro")
@@ -174,7 +172,6 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
         print ("Macro F1\t{}".format(macro_f1_wsd))
         print ("Accuracy\t{}".format(accuracy_wsd))
         
-        ## ファイルの書き出し ##
         result_file_fscore = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_WSD_fscore", mode="w")
         result_file_wsd = open(path + "/RESULT_FILE_" + str(epoch) + "EPOCH_WSD", mode="w")
         result_file_fscore.write("Micro F1\t" + str(micro_f1_wsd) + "\n")
@@ -194,7 +191,7 @@ def estimate_test(test_data, reader, epoch, path, model_type, model, is_multi_la
     print("Writing out prediction...")
 
 
-## 引数の受け取り ##
+## Arguments setting ##
 def parse_arguments():
 
     parser = argparse.ArgumentParser()
@@ -242,7 +239,7 @@ def parse_arguments():
 
 
 
-## データの読み込み ##
+## Read data ##
 def prepare():
     if args.gpu >= 0:
         cuda.check_cuda_available()
@@ -262,13 +259,13 @@ def prepare():
 
 
 
-## 訓練 ##
+## Training ##
 def objective(args):
     emb_dim = 100 ## 分散表現の次元数 ##
     pre_trained_embedding = None
     use_pretrained = None
 
-    ## 事前学習済みの分散表現を利用するかどうか ##
+    ## You can use pre-training word embedding model ##
     if args.pretrained ==1:
         use_pretrained = reader.word2index
         pre_trained_embedding = "./embedding/rcv1_8_org.model.bin"
@@ -278,8 +275,7 @@ def objective(args):
     print  ("-"*50)
 
     """
-    *_opt.dbファイルがあれば,そのデータベースで最も良いハイパーパラメータの組み合わせを取ってくる
-    なければ手動設定のハイパーパラメータが設定される.
+    If *_opt.db file exist, the best combination of hyper-parameters are used, otherwise, deault hyper-parameters by manual setteing are used.
     """
     if 'TRF' in args.model: 
         if args.model == 'TRF-Single':
@@ -312,7 +308,7 @@ def objective(args):
                 weight_decay = 4.391898194731847e-08
 
         elif args.model == 'TRF-Delay-Multi' or args.model == "TRF-Sequential":
-            db_path = args.filepath + "/" + args.model + "_opt.db" ### TRF-Delay-MultiとTRF-Sequentialは同じパラメータ
+            db_path = args.filepath + "/" + args.model + "_opt.db" ### TRF-Delay-Multi and TRF-Sequential are the same parameters.
             if os.path.exists(db_path):
                 study = optuna.create_study(study_name="TRF-Delay-Multi", storage="sqlite:///" + db_path, load_if_exists=True)
                 head = study.best_params['num_of_head']
@@ -387,7 +383,7 @@ def objective(args):
     else:
         loop = 1
 
-    ## 全体の処理 (sequentialのみ2回ループ, 他は1ループ)##
+    ## Whole processing ##
     for i in range(loop):
         if args.model == "TRF-Sequential":
             if i == 0:

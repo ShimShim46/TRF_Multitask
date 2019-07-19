@@ -26,7 +26,6 @@ def sentence_block_embed(embed, x):
     shape (batchsize, sentence_length),
     instead for array of ndim 1.
 
-    ただの行列の転置
     """
     batch, length = x.shape
     _, units = embed.W.shape
@@ -353,7 +352,7 @@ class Transformer(chainer.Chain):
         self.position_encoding_block = xp.transpose(signal, (0, 2, 1))
 
     def make_input_embedding(self, embed, block):
-        ## 位置エンコーディング
+        ## Position encoding
         batch, length = block.shape
         emb_block = sentence_block_embed(embed, block) * self.scale_emb
         emb_block += self.xp.array(self.position_encoding_block[:, :, :length])
@@ -379,19 +378,19 @@ class Transformer(chainer.Chain):
             history_mask, (batch, length, length))
         return history_mask
 
-    ## 文書分類 ##
+    ## Text categorization ##
     def tc(self,trf_encoded_matrix):
         sum_matrix = F.sum(trf_encoded_matrix,axis=2)
         y_tc = self.fc2(sum_matrix)
         return y_tc
     
-    ## 語義の曖昧さ解消 ##
+    ## Predominant sense identification ##
     def wsd_only(self,trf_encoded_matrix,labels):
         ### WSD ###
         wsd = trf_encoded_matrix.reshape(-1,trf_encoded_matrix.shape[-2]) ## [batch_size * word, depth]
-        y_wsd = self.fc2_wsd(wsd) ## ここがWSDの予測結果
-        conv_list = [self.senseid2netout[i] if i in self.senseid2netout else np.arange(len(self.senseid2netout)).tolist() for i in list(chain(*labels))] ##見る範囲を限定する. testのときに未知の語義ラベルであれば仕方ないのですべての範囲を見る
-        mask = F.broadcast_to(self.xp.array([-1024.0]*y_wsd.shape[-1],dtype=y_wsd.dtype),y_wsd.shape) ## 見ないところをマスクする
+        y_wsd = self.fc2_wsd(wsd) ## Prediction results of predominant sense identification
+        conv_list = [self.senseid2netout[i] if i in self.senseid2netout else np.arange(len(self.senseid2netout)).tolist() for i in list(chain(*labels))] 
+        mask = F.broadcast_to(self.xp.array([-1024.0]*y_wsd.shape[-1],dtype=y_wsd.dtype),y_wsd.shape) ## Masking
         cond = chainer.Variable(self.xp.zeros(y_wsd.shape,dtype=bool))
         for i,cl in enumerate(conv_list):
             if cl[0] != -1:
@@ -402,7 +401,7 @@ class Transformer(chainer.Chain):
 
         return y_wsd
 
-    ## 語義の曖昧さ解消タスクの結果を文書分類に利用 ##
+    ## Applying predominant sense identification to text categorization##
     def wsd_with_tc(self,sent,trf_encoded_matrix,labels):
 
         ### WSD ###
@@ -410,38 +409,37 @@ class Transformer(chainer.Chain):
         if self.model_type == "TRF-Multi" or self.model_type == "TRF-Delay-Multi":
             y_wsd = self.wsd_only(trf_encoded_matrix, labels)
         elif self.model_type == "TRF-Sequential":
-            y_wsd,task_type= self.wsd_model(sent, None, None, True) ## 読み込みsequential
+            y_wsd,task_type= self.wsd_model(sent, None, None, True) ## Read sequential
 
-        y_wsd_soft = F.softmax(y_wsd) ## 予測結果にSoftmaxをかける
-        argmax_wsd = F.argmax(y_wsd_soft,axis=1) ## 最大のインデクス値を取ってくる
-        cond = chainer.Variable(self.xp.array([True if i != "<PAD>" else False for i in list(chain(*labels))])) ## 語義のラベルがついていない単語は無視するための条件
+        y_wsd_soft = F.softmax(y_wsd) ## Apply Softmax
+        argmax_wsd = F.argmax(y_wsd_soft,axis=1) ## Coose the maximum index value
+        cond = chainer.Variable(self.xp.array([True if i != "<PAD>" else False for i in list(chain(*labels))])) ## Process for word without sense label
         pad_array = chainer.Variable(-1 * self.xp.ones(argmax_wsd.shape,dtype=argmax_wsd.dtype))
         pad_array_argmax_wsd = F.where(cond, argmax_wsd, pad_array)
 
-        sense_label_embed = F.embed_id(x=pad_array_argmax_wsd,W=self.xp.array(self.lookup_table_sense_fixed),ignore_label=-1) ## 固定.
+        sense_label_embed = F.embed_id(x=pad_array_argmax_wsd,W=self.xp.array(self.lookup_table_sense_fixed),ignore_label=-1) ## fixed.
 
         sense_label_embed = sense_label_embed.reshape(trf_encoded_matrix.shape[0],trf_encoded_matrix.shape[-1],-1)
         origin_shape = sense_label_embed.shape
         sense_label_embed = F.moveaxis(sense_label_embed,1,2)
 
-        ## 置き換え ##
         cond_reshape = cond.reshape(cond.shape[0],-1)
         cond_reshape = F.broadcast_to(cond_reshape,(cond_reshape.shape[0], trf_encoded_matrix.shape[1]))
         cond_reshape = cond_reshape.reshape(origin_shape)
         cond_reshape = F.swapaxes(cond_reshape,1,2)
         replaced_trf_matrix = F.where(cond_reshape,sense_label_embed,trf_encoded_matrix)
 
-        ### WSDの予測をTCに組み入れる ###
-        tc = replaced_trf_matrix ## 置換後の文書行列
+        ### Apply the result of predominant sense identification to text categorization ###
+        tc = replaced_trf_matrix 
 
-        ### TC ###
-        tc_features = F.sum(tc,axis=2) ## TC特徴
-        y_tc = self.fc2(tc_features) ### TCの予測結果
+        ### Text categorization ###
+        tc_features = F.sum(tc,axis=2) ## Features of text categorization
+        y_tc = self.fc2(tc_features) ### Prediction result of text categorization
 
         return (y_tc, y_wsd) if (self.model_type == "TRF-Multi") or (self.model_type == "TRF-Delay-Multi") else y_tc
 
 
-    ## main 関数 ##
+    ## main ##
     def __call__(self, sent, opt, epoch=None, get_prediction=False):
         self.set_random_seed(123)
         self.embed_x.disable_update()
@@ -462,8 +460,8 @@ class Transformer(chainer.Chain):
 
         # Encode Sources
 
-        ## ここはTRF ##
-        trf_sentence_matrix = self.encoder(ex_block, xx_mask) ## 共有特徴(TCとWSD)
+        ## TRF ##
+        trf_sentence_matrix = self.encoder(ex_block, xx_mask) ## Feature of both text categorization and predominant word sense
         y_tc = None
         y_wsd = None
 
@@ -473,13 +471,13 @@ class Transformer(chainer.Chain):
         elif self.model_type == "TRF-Multi" or self.model_type == "TRF-Delay-Multi" or self.model_type == "TRF-Sequential":
             if self.model_type == "TRF-Sequential":
                 if self.wsd_model is None:
-                    y_wsd = self.wsd_only(trf_sentence_matrix,labels) ## WSD
+                    y_wsd = self.wsd_only(trf_sentence_matrix,labels) ## Predominant word sense
                 else:
                     y_tc = self.wsd_with_tc(sent,trf_sentence_matrix,labels) ## TC
             else: ## TRF-Multi or TRF-Delay-Multi
                 y_tc,y_wsd = self.wsd_with_tc(sent,trf_sentence_matrix,labels)
    
-        ## lossの計算 ##
+        ## loss ##
         loss = chainer.Variable(None)
         loss_tc = chainer.Variable(None)
         loss_wsd = chainer.Variable(None)
