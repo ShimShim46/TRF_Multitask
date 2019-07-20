@@ -2,7 +2,7 @@ Text Categorization by Learning Predominant Sense of Words as Auxiliary Task
 ==
 There are five models:
 
-* XML-CNN ([Liu+ '17](http://nyc.lti.cs.cmu.edu/yiming/Publications/jliu-sigir17.pdf)) : XML-CNN proposed by Liu'17 et al.
+* XML-CNN ([Liu+ '17](http://nyc.lti.cs.cmu.edu/yiming/Publications/jliu-sigir17.pdf)) : XML-CNN proposed by Liu'17 et al. 
 * TRF-Single: A text categorization model based on the transformer encoder but without domain-specific sense prediction.
 * TRF-Multi: A text categorization model based on the transformer encoder and is trained to simultaneously categorize texts and predicts a predominant sense for each word.
 * TRF-Delay-Multi: A text categorization model to start learning predominant sense model at first until the stable, and after that it adapts text categorization simultaneously.
