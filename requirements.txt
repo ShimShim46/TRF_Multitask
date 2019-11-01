@@ -35,7 +35,7 @@ lxml==4.2.5
 Mako==1.0.7
 MarkupSafe==1.0
 matplotlib==2.1.2
-nltk==3.3
+nltk==3.4.5
 numpy==1.14.0
 optuna==0.8.0
 pandas==0.22.0
