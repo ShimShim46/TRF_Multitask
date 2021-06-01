@@ -67,7 +67,7 @@ tqdm==4.19.5
 treetaggerwrapper==2.2.4
 typing==3.6.6
 tzlocal==1.5.1
-urllib3==1.22
+urllib3==1.26.5
 wcwidth==0.1.7
 Werkzeug==0.12.2
 xmltodict==0.11.0
