@@ -32,7 +32,7 @@ itsdangerous==0.24
 Jinja2==2.10
 jmespath==0.9.3
 lxml==4.2.5
-Mako==1.0.7
+Mako==1.2.2
 MarkupSafe==1.0
 matplotlib==2.1.2
 nltk==3.3
